@@ -65,6 +65,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import projekt.interfacer.utils.IOUtils;
 import projekt.interfacer.utils.SoundUtils;
@@ -433,6 +434,18 @@ public class JobService extends Service {
             return isCallerAuthorized(Binder.getCallingUid());
         }
 
+        @Override
+        public Map<String, List<OverlayInfo>> getAllOverlays() {
+            // Verify caller identity
+            if (isCallerAuthorized(Binder.getCallingUid())) {
+                try {
+                    return getOMS().getAllOverlays(UserHandle.USER_SYSTEM);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "", e);
+                }
+            }
+            return null;
+        }
     };
 
     private static IOverlayManager getOMS() {
