@@ -48,6 +48,8 @@ public class IOUtils {
             + File.separator + "ui";
     public static final String SYSTEM_THEME_BOOTANIMATION_PATH = SYSTEM_THEME_PATH + File.separator
             + "bootanimation.zip";
+    public static final String SYSTEM_THEME_SHUTDOWNANIMATION_PATH = SYSTEM_THEME_PATH + File.separator
+            + "shutdownanimation.zip";
     private static final String TAG = IOUtils.class.getSimpleName();
 
     private static boolean dirExists(String dirPath) {

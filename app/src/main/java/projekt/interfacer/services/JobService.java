@@ -79,6 +79,7 @@ public class JobService extends Service {
     private static final String PRIMARY_COMMAND_KEY = "primary_command_key";
     private static final String COMMAND_VALUE_JOB_COMPLETE = "job_complete";
     private static final String COMMAND_VALUE_BOOTANIMATION = "bootanimation";
+    private static final String COMMAND_VALUE_SHUTDOWNANIMATION = "shutdownanimation";
     private static final String COMMAND_VALUE_FONTS = "fonts";
     private static final String COMMAND_VALUE_AUDIO = "audio";
     private static final String INTERFACER_PACKAGE = "projekt.interfacer";
@@ -209,10 +210,10 @@ public class JobService extends Service {
 
             if (name == null) {
                 log("Restoring system boot animation...");
-                clearBootAnimation();
+                clearBootOrShutdownAnimation(true /* isBootAnimation */);
             } else {
                 log("Configuring themed boot animation...");
-                copyBootAnimation(name);
+                copyBootOrShutdownAnimation(name, true /* isBootAnimation */);
             }
             informCompletion(COMMAND_VALUE_BOOTANIMATION);
             informCompletion(COMMAND_VALUE_JOB_COMPLETE);
@@ -445,6 +446,22 @@ public class JobService extends Service {
                 }
             }
             return null;
+        }
+
+        @Override
+        public void applyShutdownAnimation(String name) {
+            // Verify caller identity
+            if (!isCallerAuthorized(Binder.getCallingUid())) return;
+
+            if (name == null) {
+                log("Restoring system shutdown animation...");
+                clearBootOrShutdownAnimation(false /* isBootAnimation */);
+            } else {
+                log("Configuring themed shutdown animation...");
+                copyBootOrShutdownAnimation(name, false /* isBootAnimation */);
+            }
+            informCompletion(COMMAND_VALUE_SHUTDOWNANIMATION);
+            informCompletion(COMMAND_VALUE_JOB_COMPLETE);
         }
     };
 
@@ -802,13 +819,13 @@ public class JobService extends Service {
         }
     }
 
-    private void copyBootAnimation(String fileName) {
-
+    private void copyBootOrShutdownAnimation(String fileName, boolean isBootAnimation) {
         try {
-            clearBootAnimation();
+            clearBootOrShutdownAnimation(isBootAnimation);
 
             File source = new File(fileName);
-            File dest = new File(IOUtils.SYSTEM_THEME_BOOTANIMATION_PATH);
+            File dest = new File(isBootAnimation ? IOUtils.SYSTEM_THEME_BOOTANIMATION_PATH :
+                    IOUtils.SYSTEM_THEME_SHUTDOWNANIMATION_PATH);
 
             IOUtils.bufferedCopy(source, dest);
 
@@ -824,9 +841,10 @@ public class JobService extends Service {
         }
     }
 
-    private void clearBootAnimation() {
+    private void clearBootOrShutdownAnimation(boolean isBootAnimation) {
         try {
-            File f = new File(IOUtils.SYSTEM_THEME_BOOTANIMATION_PATH);
+            File f = new File(isBootAnimation ? IOUtils.SYSTEM_THEME_BOOTANIMATION_PATH :
+                    IOUtils.SYSTEM_THEME_SHUTDOWNANIMATION_PATH);
             if (f.exists()) {
                 boolean deleted = f.delete();
                 if (!deleted) {
